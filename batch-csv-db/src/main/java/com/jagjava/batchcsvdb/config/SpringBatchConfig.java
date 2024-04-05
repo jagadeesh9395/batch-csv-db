@@ -35,6 +35,8 @@ public class SpringBatchConfig {
     private CustomerRepository customerRepository;
     private JpaTransactionManager jpaTransactionManager;
 
+    public static final int BATCH_SIZE = 100;
+
     @Bean
     public FlatFileItemReader<Customer> customerItemReader() {
         FlatFileItemReader<Customer> itemReader = new FlatFileItemReader<>();
@@ -107,7 +109,7 @@ public class SpringBatchConfig {
     @Bean
     public Step step1(JobRepository jobRepository) {
         return new StepBuilder("import-csv-to-db-step", jobRepository)
-                .<Customer, Customer>chunk(10, jpaTransactionManager)
+                .<Customer, Customer>chunk(BATCH_SIZE, jpaTransactionManager)
                 .reader(customerItemReader())
                 .processor(process())
                 .writer(customerItemWriter())
@@ -117,7 +119,7 @@ public class SpringBatchConfig {
     @Bean
     Step step2(JobRepository jobRepository) {
         return new StepBuilder("export-db-to-csv-step", jobRepository)
-                .<Customer, Customer>chunk(10, jpaTransactionManager)
+                .<Customer, Customer>chunk(BATCH_SIZE, jpaTransactionManager)
                 .reader(readFromDataBase())
                 .writer(writeIntoCSV())
                 .build();
